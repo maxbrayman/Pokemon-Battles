@@ -1,4 +1,11 @@
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import MainStackParams from "../navigation/paramLists/MainStack";
@@ -6,6 +13,7 @@ import { useHost } from "../providers/HostProvider";
 import { useGameCode } from "../providers/CodeProvider";
 import { useSocket } from "../providers/SocketProvider";
 import { random } from "../utils/math";
+import { useEffect } from "react";
 
 type StartScreenProps = NativeStackScreenProps<MainStackParams, "StartScreen">;
 
@@ -17,6 +25,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ navigation, route }) => {
   const handleCreateGame = () => {
     const pokemonID = random(0, 151);
     const avatar = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonID}.png`;
+    if (!socket?.connected) socket?.connect();
     socket?.emit("createGame", avatar, (code: string) => {
       setIsHost?.(true);
       setCode?.(code);
@@ -25,6 +34,16 @@ const StartScreen: React.FC<StartScreenProps> = ({ navigation, route }) => {
       });
     });
   };
+
+  useEffect(() => {
+    socket?.on("connect_error", () => {
+      Alert.alert("Error", "Unable to connect to the server.");
+    });
+
+    return () => {
+      socket?.removeListener("connect_error");
+    };
+  }, [socket]);
 
   return (
     <SafeAreaView style={styles.container}>

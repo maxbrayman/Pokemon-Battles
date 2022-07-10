@@ -1,10 +1,6 @@
 import { useContext, useEffect, useState, createContext } from "react";
 import { io, Socket } from "socket.io-client";
-import {
-  AttackResponse,
-  GameOver,
-  SwapResponse,
-} from "../models/serverResponses";
+import { AttackResponse, SwapResponse } from "../models/serverResponses";
 import { Attack, Swap } from "../models/actions";
 import PokemonClass from "../models/Pokemon";
 import { GameState } from "../screens/BattleScreen";
@@ -21,15 +17,12 @@ export interface JoinRoomResponse {
 
 interface ServerToClientEvents {
   playerJoinedGame: (player: string) => void;
-  joinedGame: (code: string) => void;
   playersAreReady: () => void;
   teamsAreSet: () => void;
   opponentTeamSet: (team: PokemonClass[]) => void;
   updateTeam: (response: AttackResponse) => void;
-  didConnect: (socketID: string) => void;
   swapPokemon: (response: SwapResponse) => void;
   updateGameState: (state: GameState) => void;
-  gameOver: (response: GameOver) => void;
 }
 
 interface ClientToServerEvents {
@@ -62,7 +55,9 @@ const SocketProvider: React.FC<Props> = ({ children }) => {
   > | null>(null);
 
   useEffect(() => {
-    const newSocket = io(domain);
+    const newSocket = io(domain, {
+      reconnection: false,
+    });
     setSocket(newSocket);
 
     return () => {
